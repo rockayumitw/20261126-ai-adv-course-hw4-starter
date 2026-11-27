@@ -235,6 +235,18 @@
 
 `calculateShipping({ subtotal, method, isRemoteArea, isExpress })` 回傳 `baseFee`、`remoteAreaSurcharge`、`expressSurcharge`、`shippingFee` 及 `totalAmount` 等明細。滿額優惠僅將 `baseFee` 歸零，不影響附加費。
 
+### Coupon 工具模組（src/utils/coupon.js）
+
+| 優惠碼 | 折扣 | 條件 |
+| --- | --- | --- |
+| `FLOWER100` | 折抵 100 元 | 商品小計滿 800 元 |
+| `SPRING10` | 小計 9 折，最多折抵 300 元 | 無門檻 |
+| `SUMMER50` | — | 已失效，不可使用 |
+
+- 優惠碼不分大小寫，訂單以大寫記錄；每張訂單最多 1 組；折扣四捨五入至整數
+- 只折抵商品小計，不折抵運費；免運門檻以**折扣後**小計判斷；`total_amount = subtotal - discount + shipping_fee`
+- 無效、已失效或未達門檻 → 400 `INVALID_COUPON`，不建立訂單、不扣庫存、不清空購物車
+
 ---
 
 ## 訂單管理
@@ -255,6 +267,7 @@
 | shippingMethod | string | 是 | `home_delivery` 或 `convenience_store` |
 | isRemoteArea | boolean | 是 | 是否為偏遠地區 |
 | isExpress | boolean | 是 | 是否為當日急件 |
+| couponCode | string | 否 | 優惠碼（不分大小寫） |
 
 **業務邏輯**：
 1. 驗證收件人欄位、Email 格式及配送條件
@@ -262,10 +275,10 @@
 3. 購物車為空 → 400 CART_EMPTY
 4. 逐品項檢查庫存，不足者收集名稱 → 400「以下商品庫存不足：名稱1, 名稱2」
 5. 依資料庫價格計算 `subtotal = Σ(price × quantity)`
-6. 調用 Shipping 模組計算 `shippingFee`，並得 `totalAmount = subtotal + shippingFee`
+6. 若有 `couponCode`，由 Coupon 模組驗證並計算 `discount`（無效回 400 INVALID_COUPON）；再以折扣後小計調用 Shipping 模組，得 `totalAmount = subtotal - discount + shippingFee`
 7. 生成 `orderNo = ORD-YYYYMMDD-{5碼UUID大寫}`（日期採台北時間）
 8. **Transaction**：INSERT order（含配送快照） → INSERT order_items（快照名稱+價格） → UPDATE stock → DELETE cart_items
-9. 回傳 201 + 訂單詳情（含 `subtotal`、`shipping_fee`、`total_amount`）
+9. 回傳 201 + 訂單詳情（含 `subtotal`、`discount`、`coupon_code`、`shipping_fee`、`total_amount`）
 
 **錯誤情境**：
 

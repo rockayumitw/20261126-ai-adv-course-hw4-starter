@@ -34,6 +34,7 @@
 │   │   └── errorHandler.js         # 全域錯誤處理：依狀態碼對應錯誤碼與安全訊息，500 一律回「伺服器內部錯誤」
 │   ├── utils/
 │   │   ├── ecpay.js                # 綠界 ECPay 工具：CheckMacValue 簽章、URL 編碼、AIO 表單產生、QueryTradeInfo 查詢
+│   │   ├── coupon.js               # 優惠碼規則：FLOWER100 / SPRING10 / SUMMER50（已失效）
 │   │   ├── shipping.js             # 配送費用純邏輯：基本運費、免運門檻、偏遠/急件附加費
 │   │   └── validators.js           # 共用輸入驗證：非空字串、選填字串、正整數
 │   ├── services/
@@ -373,7 +374,9 @@ server.js
 | shipping_method | TEXT | NOT NULL DEFAULT 'home_delivery' | `home_delivery` 或 `convenience_store` |
 | is_remote_area | INTEGER | NOT NULL DEFAULT 0 | 偏遠地區快照（0/1） |
 | is_express | INTEGER | NOT NULL DEFAULT 0 | 當日急件快照（0/1） |
-| total_amount | INTEGER | NOT NULL | 訂單總金額（`subtotal + shipping_fee`） |
+| coupon_code | TEXT | 可為 NULL | 使用的優惠碼（大寫） |
+| discount | INTEGER | NOT NULL DEFAULT 0 | 優惠碼折扣金額 |
+| total_amount | INTEGER | NOT NULL | 訂單總金額（`subtotal - discount + shipping_fee`） |
 | status | TEXT | NOT NULL DEFAULT 'pending', CHECK IN ('pending','paid','failed') | 訂單狀態 |
 | merchant_trade_no | TEXT | 可為 NULL | 綠界交易編號（由 order_no 去除連字號產生，如 `ORD20260412A1B2C`） |
 | created_at | TEXT | NOT NULL DEFAULT datetime('now') | 建立時間 |

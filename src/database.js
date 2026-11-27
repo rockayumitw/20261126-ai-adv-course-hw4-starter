@@ -105,6 +105,16 @@ function initializeDatabase() {
     }
   }
 
+  // Migration: coupon snapshot columns
+  for (const [column, definition] of [
+    ['coupon_code', 'TEXT'],
+    ['discount', 'INTEGER NOT NULL DEFAULT 0']
+  ]) {
+    if (!orderColumns.has(column)) {
+      db.exec(`ALTER TABLE orders ADD COLUMN ${column} ${definition}`);
+    }
+  }
+
   db.prepare('UPDATE orders SET subtotal = total_amount WHERE subtotal = 0').run();
 
   // Seed data
