@@ -55,6 +55,20 @@ describe('Cart API', () => {
     expect(res.body.data).toHaveProperty('quantity', 3);
   });
 
+  it.each([0, -1, 1.5, '', null, true, 'abc'])(
+    'should reject invalid quantity %j on update (guest mode)',
+    async (quantity) => {
+      const res = await request(app)
+        .patch(`/api/cart/${cartItemId}`)
+        .set('X-Session-Id', sessionId)
+        .send({ quantity });
+
+      expect(res.status).toBe(400);
+      expect(res.body).toHaveProperty('error', 'VALIDATION_ERROR');
+      expect(res.body.data).toBeNull();
+    }
+  );
+
   it('should remove cart item (guest mode)', async () => {
     const res = await request(app)
       .delete(`/api/cart/${cartItemId}`)
