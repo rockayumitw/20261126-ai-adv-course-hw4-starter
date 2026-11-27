@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### Added
+- 我的訂單篩選與分頁（Issue #3）：`GET /api/orders` 支援 `status`（pending/paid/failed）、`page`（預設 1）、`limit`（預設 10、最大 50），回應 `{ orders, pagination }`，新到舊排序；參數不合法回 400。列表同時帶出 `discount`、`coupon_code`
 - 結帳優惠碼（Issue #1）：新增 `src/utils/coupon.js`（`FLOWER100` 滿 800 折 100、`SPRING10` 9 折最多折 300、`SUMMER50` 已失效），優惠碼不分大小寫；`POST /api/orders` 接受選填 `couponCode`，訂單新增 `coupon_code`、`discount` 欄位，無效優惠碼回 400 `INVALID_COUPON`
 - 新增 `tests/coupon.test.js` Coupon 單元測試
 
